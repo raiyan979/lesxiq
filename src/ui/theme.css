@@ -1,0 +1,125 @@
+/*
+ * Lexiq design tokens — the single source of truth for color, type, spacing,
+ * shape and motion. Values are transcribed verbatim from the build brief §7;
+ * do not introduce colors or sizes outside this file.
+ *
+ * Theme is selected by `data-theme="dark|light"` on <html> (dark is default).
+ * Font size is selected by `data-font="small|medium|large"` on <html>.
+ */
+
+:root,
+:root[data-theme='dark'] {
+  /* --- Dark theme (default) --- */
+  --bg: #0e1116; /* app background */
+  --surface: #161b22; /* cards, sidebar */
+  --surface-2: #1c2129; /* raised elements, inputs */
+  --border: #262d38;
+  --text: #e6edf3; /* primary text */
+  --text-dim: #8b97a5; /* secondary text, labels */
+  --accent: #34e1c4; /* single neon accent — mint/cyan */
+  --accent-dim: #1f8f7e;
+  --success: #3fb950;
+  --error: #f85149;
+  --warn: #e3b341;
+  --gender-m: #58a6ff; /* masculine article tint */
+  --gender-f: #f778ba; /* feminine article tint */
+
+  /* Text color to place ON an accent fill (primary buttons, etc.). In dark
+   * theme the accent is bright, so near-black bg text reads best. */
+  --on-accent: var(--bg);
+  /* Raised-card shadow — only meaningful on light theme (see override). */
+  --card-shadow: none;
+}
+
+:root[data-theme='light'] {
+  /* --- Light theme --- */
+  --bg: #f7f9fb;
+  --surface: #ffffff;
+  --surface-2: #eef2f6;
+  --border: #d8dee6;
+  --text: #1b2027;
+  --text-dim: #5a6472;
+  /* Keep the same accent hue, but per brief use the darker accent for
+   * text-on-light legibility. --accent stays for fills (progress bars, focus
+   * rings); --accent-text is what components use for accent-colored TEXT. */
+  --accent: #34e1c4;
+  --accent-dim: #1f8f7e;
+  --accent-text: #1f8f7e;
+  /* Semantic colors darkened slightly for AA contrast on light surfaces. */
+  --success: #1a7f37;
+  --error: #cf222e;
+  --warn: #9a6700;
+  --gender-m: #0969da;
+  --gender-f: #bf3989;
+
+  --on-accent: #06231e; /* dark text on the bright accent fill */
+  --card-shadow: 0 1px 3px rgba(27, 32, 39, 0.08), 0 1px 2px rgba(27, 32, 39, 0.06);
+}
+
+/* On dark theme, accent-colored text is just the accent itself. */
+:root,
+:root[data-theme='dark'] {
+  --accent-text: var(--accent);
+}
+
+:root {
+  /* --- Typography --- */
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', monospace;
+
+  /* Reading / exercise text size, scaled by the user's font-size setting.
+   * Default = medium (16px). §7: small 14 / medium 16 / large 18. */
+  --reading-size: 16px;
+  --french-display-size: 24px; /* French sentence in exercises, §7 */
+
+  /* --- 8px spacing grid --- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-8: 48px;
+
+  /* --- Shape --- */
+  --radius-card: 10px;
+  --radius-button: 8px;
+  --radius-input: 8px;
+
+  /* --- Motion --- (§7: transitions ≤150ms ease) */
+  --transition-fast: 120ms ease;
+  --transition: 150ms ease;
+
+  /* Chrome dimensions (kept in sync with src/config/constants.ts). */
+  --sidebar-width: 240px;
+  --sidebar-width-collapsed: 64px;
+  --statusbar-height: 44px;
+  --content-max-width: 720px;
+  --exercise-max-width: 640px;
+
+  /* The one tasteful flourish: a faint accent glow on accent elements. */
+  --accent-glow: 0 0 0 1px var(--accent), 0 0 12px -4px var(--accent);
+}
+
+:root[data-font='small'] {
+  --reading-size: 14px;
+}
+:root[data-font='large'] {
+  --reading-size: 18px;
+}
+
+/* Respect reduced-motion: kill transitions and the glow entirely (§7 a11y). */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition-fast: 0ms;
+    --transition: 0ms;
+    --accent-glow: 0 0 0 1px var(--accent);
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+}
