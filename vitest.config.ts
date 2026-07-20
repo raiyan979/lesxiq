@@ -6,7 +6,11 @@ import { defineConfig } from 'vitest/config';
 // happens to match no files.
 export default defineConfig({
   test: {
-    include: ['src/**/*.{test,spec}.ts', 'tests/**/*.{test,spec}.ts'],
+    include: [
+      'src/**/*.{test,spec}.ts',
+      'content/**/*.{test,spec}.ts',
+      'tests/**/*.{test,spec}.ts',
+    ],
     passWithNoTests: true,
   },
 });

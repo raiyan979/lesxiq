@@ -12,6 +12,13 @@ dist
 dist-ssr
 *.local
 
+# Build-time pipeline cache (downloaded Tatoeba/frequency data, intermediate JSON)
+content/.cache/
+
+# Generated seed artifacts (produced by content/build.ts; not source)
+resources/*.db
+resources/audio/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
