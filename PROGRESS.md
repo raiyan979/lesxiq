@@ -16,12 +16,40 @@ it as work lands.
   **audio deferred** entirely for now (task #13).
 - [x] **Phase 1** — scaffold + shell (DONE, pushed).
 - [~] **Phase 2** — db + content pipeline (MOSTLY DONE — pipeline proven; curriculum
-  authoring 3/40 units).
-- [ ] **Phase 3** — scheduler (ts-fsrs wrapper, queue, rating derivation).
-- [ ] **Phase 4** — 6 exercise components + pure graders + focused session UI.
-- [ ] **Phase 5** — curriculum map, unit detail, lesson viewer, unlock/progress.
-- [ ] **Phase 6** — dashboard, stats + charts, streak/XP.
-- [ ] **Phase 7** — settings + optional AI module (stub, disabled).
+  authoring 3/40 units). **#9 seed-copy DONE** (below).
+- [x] **Phase 3** — scheduler (ts-fsrs wrapper, queue, rating derivation) — DONE.
+- [x] **Phase 4** — 6 pure graders + exercise components + focused session UI — DONE.
+  Unit-practice loop live. **Review daily-queue loop DONE**: `getReviewItems()` builds
+  flashcards from the due+new queue (front=EN/concept, back=FR+IPA+audio, grammar=markdown);
+  `src/review/` controller + `Review.svelte` (reveal → 4 FSRS buttons → gradeCard → next,
+  autoplay audio on flip, keyboard 1–4/Space, empty + done states). Verified vs seed DB
+  (15-card queue resolves, 14/15 with audio).
+- [x] **Phase 5** — curriculum map (Learn units list), unit detail + lesson viewer
+  (grammar/dialogue lessons via `marked`, vocab table, `/learn/:unitId` → `/practice`),
+  and unlock-on-completion (finish practice → unit `completed`, next unit → `available`;
+  start practice → `in_progress`). Verified against seed DB. DONE.
+- [x] **Phase 6** — **Dashboard DONE**: `getDashboardData()` (queries.ts) composes
+  study-status + app_state totals + resume-unit + unit counts in one call; `Dashboard.svelte`
+  (was placeholder) shows greeting, a Review hero card (due count / new-today / caught-up
+  state → /review), a Continue-learning card (first in-progress else first available unit →
+  /learn/:id, or a "all complete" state), and a 5-tile stats strip (streak+best, XP, reviews,
+  words learned, units done). Type-check + lint clean.
+  **Stats screen DONE**: `getStatsData()` (queries.ts) returns reviews/day (last 14, zero-filled),
+  rating distribution + retention %, card-state mix, and a 14-day due forecast (overdue folded
+  into day 0, >14d dropped). `Stats.svelte` renders a KPI row + two inline-SVG bar charts
+  (reviews/day, forecast) + a stacked card-mix bar with legend — zero chart deps. Empty states
+  when no history. Data-shaping logic verified vs synthetic node:sqlite data (zero-fill, overdue
+  folding, retention 3/5→60% all correct). Type-check + lint clean.
+  **Phase 6 COMPLETE** (dashboard + stats + live streak/XP status bar).
+- [~] **Phase 7** — **Settings DONE**: `Settings.svelte` (was placeholder) with Appearance
+  (theme dark/light via themeStore, font size small/medium/large via new `src/ui/prefs.svelte.ts`
+  → `data-font` on <html>, localStorage-backed like theme, imported in App.svelte for flash-free
+  apply), Study (new_cards_per_day number + target_retention select → DB `settings`, read by
+  scheduler/status bar; audio on/off toggle gating `playClip` via prefs), a disabled AI "coming
+  soon" stub, and Data → Reset progress (`resetProgress()` in queries.ts: clears review_logs,
+  all cards→new, zeroes app_state, re-locks all units except the first; two-step confirm).
+  Reset SQL verified vs seed-DB copy (all fresh-state assertions pass). Type-check + lint clean.
+  **Remaining Phase 7**: nothing required (AI is an intentional disabled stub).
 - [ ] **Phase 8** — a11y pass, adversarial review, README, Windows packaging.
 
 ---
@@ -66,17 +94,41 @@ it as work lands.
 
 ## Remaining
 
-### Phase 2 leftovers
-- **#11 Author 37 more units** — A1 ×15 (days/months, family, food, gender &
-  articles le/la/les/un/une, questions Où est/C'est combien, present tense -er),
-  A2 ×14 (start passé composé EARLY per brief), B1 ×8. Append to
-  `content/curriculum/a1.ts` + new `a2.ts`, `b1.ts`; add to `index.ts`. Then rebuild.
+### Content authoring (#11) — IN PROGRESS
+- **A1: COMPLETE — 18/18 units** in `a1.ts`: greetings, introductions, numbers,
+  articles, -er verbs, family, food, days/months, questions, colours/adjectives,
+  house, time, weather, clothing, body/health, directions, hobbies, shopping.
+  Verified: 18/18 have all 6 exercise types, 0 orphans, 238 vocab, 273 exercises.
+- **A2: COMPLETE — 14/14 units** in `a2.ts`: passé composé (avoir), passé composé
+  (être), imparfait, futur proche, daily routine (reflexive verbs), object pronouns
+  (le/la/lui/leur), negation (jamais/rien/personne/plus/que), comparatives/superlatives,
+  travel & transport (prepositions), restaurant (partitive du/de la/des), shopping &
+  quantities (quantity + de), health & body (avoir mal à), pronouns y & en, connectors
+  (parce que/donc/mais/alors). Each: 12 vocab, 2 lessons, 18 exercises (6/6 types),
+  +3 hand-authored grammar cloze drills. Verified vs rebuilt seed: 0 orphan FKs.
+- **B1 ×~8** — new `b1.ts`. Add each array to `index.ts`. Rebuild seed after each batch.
+- Seed rebuild proven: **32 units (18 A1 + 14 A2) → 407 vocab, 525 exercises, 664 cards,
+  0 orphans** (`npx tsx content/build.ts`; sentence_pool.json cached, so ingest skipped).
+  NOTE: audio for the new A2 vocab/sentences not yet generated — run `npm run build:audio`.
+
+### Gamification / status bar (part of Phase 6) — DONE (initial)
+- Status bar is now LIVE (was hardcoded 0s): `src/ui/stats.svelte.ts` reactive store,
+  `getStudyStatus()` + `recordReview()` in queries.ts. XP by rating (2/5/10/12),
+  daily streak (increment if yesterday, reset on gap, shown 0 if broken), due-count,
+  new-today vs `new_cards_per_day`. Refreshes after each grade. Verified vs seed DB.
 - **#9 Rust first-launch seed copy** — in `src-tauri/src/lib.rs` `setup()`, copy
   bundled `resources/lexiq.db` (+ later `audio/`) into app data dir if absent, so
   `Database.load('sqlite:lexiq.db')` opens the seeded copy. Bundle `resources/` in
   `tauri.conf.json`. Graceful message if missing.
-- **#13 Audio (DEFERRED)** — Piper/edge-tts TTS for every vocab+sentence, write
-  files + UPDATE `audio_path`. App already degrades gracefully with NULL audio_path.
+- **#13 Audio — DONE.** `content/pipeline/audio.ts` synthesizes every vocab word +
+  authored sentence via **edge-tts** (`fr-FR-DeniseNeural`) → `src-tauri/resources/audio/
+  <sha1>.mp3` (452 clips, 6.2 MB, deterministic + incremental; `npm run build:audio`).
+  `build.ts` sets `audio_path` (287 vocab, 176 sentences, 22 listening exercises).
+  Bundled via `tauri.conf.json` resources; played through the **asset protocol**
+  (`assetProtocol.enable` + scope `$RESOURCE/**`) using `resolveResource` +
+  `convertFileSrc` in `src/ui/audio.ts`. UI: `AudioButton.svelte` on vocab rows +
+  listening-dictation (real audio now, not the text fallback). Degrades to no-op if
+  a clip/path is missing or not under Tauri. Audio files are gitignored (regenerable).
 
 ### Then Phases 3–8 (see phase status above).
 
@@ -101,6 +153,19 @@ it as work lands.
 7. Node native TS needs `.ts` import extensions; we use **tsx** for pipeline scripts
    to keep extension-less imports. Big joins need
    `NODE_OPTIONS=--max-old-space-size=4096`.
+9. **New seed content not visible after rebuild — first-launch copy only.**
+   `seed_database` copies `resources/lexiq.db` into the app config dir ONLY if
+   absent, so rebuilding the seed does NOT reach an already-installed user. During
+   authoring, refresh by deleting `%APPDATA%\com.lexiq.app\lexiq.db` (resets test
+   progress) then relaunching. TODO (before ship): content-versioned migration so
+   updates land without wiping progress.
+8. **SQL writes silently failed (reads worked) — missing capability.**
+   `sql:default` grants only `allow-close/allow-load/allow-select` (reads). Writes
+   go through the `execute` command, which needs `sql:allow-execute`. Symptom:
+   exercises load fine but grading never persists (review_logs stays empty). FIX:
+   add `"sql:allow-execute"` to `src-tauri/capabilities/default.json`. Requires a
+   Rust rebuild (restart `tauri dev`). Also: the session now surfaces write errors
+   on-screen instead of hanging silently.
 
 ---
 

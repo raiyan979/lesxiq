@@ -20,6 +20,7 @@ import { loadFrequencyList } from './pipeline/frequency';
 import { computeDifficulty } from './pipeline/difficulty';
 import { extractWordTokens } from './pipeline/difficulty';
 import { generateExercisesForUnit } from './pipeline/exercises';
+import { audioBasename, audioRelPath, AUDIO_SUBDIR } from './pipeline/audio-path';
 import type { PoolSentence } from './pipeline/ingest';
 import type { Level } from '../src/db/types';
 
@@ -27,7 +28,8 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const MIGRATION = join(HERE, '..', 'src', 'db', 'migrations', '0001_init.sql');
 const FREQ_FILE = join(HERE, '.cache', 'fr_50k.txt');
 const POOL_FILE = join(HERE, '.cache', 'sentence_pool.json');
-const RESOURCES = join(HERE, '..', 'resources');
+const RESOURCES = join(HERE, '..', 'src-tauri', 'resources');
+const AUDIO_DIR = join(RESOURCES, AUDIO_SUBDIR);
 const OUT_DB = join(RESOURCES, 'lexiq.db');
 
 const SCHEMA_VERSION = 1;
@@ -40,6 +42,13 @@ function jsonOrNull(value: string[] | null): string | null {
 function main(): void {
   const freq = loadFrequencyList(FREQ_FILE);
   const rankOf = freq.rankOf;
+
+  // Which audio clips were generated (content/pipeline/audio.ts). A row gets an
+  // audio_path only if its file exists, so a partial/absent audio run just means
+  // NULL paths and the app degrades gracefully.
+  const audioFiles = existsSync(AUDIO_DIR) ? new Set(readdirSync(AUDIO_DIR)) : new Set<string>();
+  const audioPathFor = (text: string): string | null =>
+    audioFiles.has(audioBasename(text)) ? audioRelPath(text) : null;
 
   // frequency_rank for a (possibly multi-word) lemma: the best (lowest) rank
   // among its tokens, or null if none are in the list.
@@ -70,15 +79,15 @@ function main(): void {
   );
   const insVocab = db.prepare(
     `INSERT INTO vocab (unit_id, lemma_fr, translation_en, pos, gender, ipa, frequency_rank, audio_path)
-     VALUES (?, ?, ?, ?, ?, ?, ?, NULL)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
   );
   const insSentence = db.prepare(
     `INSERT INTO sentences (text_fr, text_en, tatoeba_id, difficulty_score, word_count, unit_id, audio_path, tags)
-     VALUES (?, ?, ?, ?, ?, ?, NULL, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
   );
   const insExercise = db.prepare(
     `INSERT INTO exercises (unit_id, sentence_id, vocab_id, type, direction, prompt, answer, accepted_alternatives, distractors, audio_path)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   );
   const insCard = db.prepare(
     `INSERT OR IGNORE INTO cards (item_type, item_id, state) VALUES (?, ?, 'new')`,
@@ -143,6 +152,7 @@ function main(): void {
           v.gender ?? 'na',
           v.ipa ?? null,
           lemmaRank(v.lemma_fr),
+          audioPathFor(v.lemma_fr),
         ).lastInsertRowid,
       );
       vocabIdByLemma.set(v.lemma_fr, vocabId);
@@ -163,6 +173,7 @@ function main(): void {
           Number(d.score.toFixed(4)),
           d.wordCount,
           unitId,
+          audioPathFor(s.text_fr),
           s.tags ? JSON.stringify(s.tags) : null,
         ).lastInsertRowid,
       );
@@ -177,6 +188,11 @@ function main(): void {
         ex.sentence_fr !== null ? (sentenceIdByText.get(ex.sentence_fr) ?? null) : null;
       const vocabId =
         ex.vocab_lemma !== null ? (vocabIdByLemma.get(ex.vocab_lemma) ?? null) : null;
+      // Listening-dictation plays the linked sentence's clip; others silent.
+      const exAudio =
+        ex.type === 'listening_dictation' && ex.sentence_fr !== null
+          ? audioPathFor(ex.sentence_fr)
+          : null;
       insExercise.run(
         unitId,
         sentenceId,
@@ -187,6 +203,7 @@ function main(): void {
         ex.answer,
         jsonOrNull(ex.accepted_alternatives),
         jsonOrNull(ex.distractors),
+        exAudio,
       );
       exerciseCount++;
       // A sentence used in an exercise becomes a card.
@@ -207,6 +224,7 @@ function main(): void {
       s.tatoeba_id,
       s.difficulty_score,
       s.word_count,
+      null,
       null,
       null,
     );

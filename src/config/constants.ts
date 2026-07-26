@@ -22,4 +22,6 @@ export const CHROME = {
 export const STORAGE_KEYS = {
   sidebarCollapsed: 'lexiq.sidebarCollapsed',
   theme: 'lexiq.theme',
+  fontSize: 'lexiq.fontSize',
+  audioEnabled: 'lexiq.audioEnabled',
 } as const;

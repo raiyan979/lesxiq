@@ -7,6 +7,8 @@
 import type { Component } from 'svelte';
 import Dashboard from '../routes/Dashboard.svelte';
 import Learn from '../routes/Learn.svelte';
+import UnitDetail from '../routes/UnitDetail.svelte';
+import Session from '../routes/Session.svelte';
 import Review from '../routes/Review.svelte';
 import Library from '../routes/Library.svelte';
 import Stats from '../routes/Stats.svelte';
@@ -22,6 +24,8 @@ export interface RouteEntry {
 export const routes: RouteEntry[] = [
   { pattern: '/', component: Dashboard, title: 'Dashboard' },
   { pattern: '/learn', component: Learn, title: 'Learn' },
+  { pattern: '/learn/:unitId', component: UnitDetail, title: 'Unit' },
+  { pattern: '/learn/:unitId/practice', component: Session, title: 'Practice' },
   { pattern: '/review', component: Review, title: 'Review' },
   { pattern: '/library', component: Library, title: 'Library' },
   { pattern: '/stats', component: Stats, title: 'Stats' },

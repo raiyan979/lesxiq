@@ -16,8 +16,8 @@ dist-ssr
 content/.cache/
 
 # Generated seed artifacts (produced by content/build.ts; not source)
-resources/*.db
-resources/audio/
+src-tauri/resources/*.db
+src-tauri/resources/audio/
 
 # Editor directories and files
 .vscode/*

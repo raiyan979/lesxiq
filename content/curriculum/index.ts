@@ -5,6 +5,7 @@
 
 import type { UnitDef } from './types';
 import { a1Units } from './a1';
+import { a2Units } from './a2';
 
-// A2 and B1 unit arrays are appended as they are authored.
-export const curriculum: UnitDef[] = [...a1Units];
+// B1 units are appended as they are authored.
+export const curriculum: UnitDef[] = [...a1Units, ...a2Units];

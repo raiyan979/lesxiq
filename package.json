@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "check": "svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json && tsc -p content/tsconfig.json",
+    "build:audio": "tsx content/pipeline/audio.ts",
     "build:content": "tsx content/pipeline/ingest.ts && tsx content/build.ts",
     "lint": "eslint .",
     "format": "prettier --write .",
@@ -40,6 +41,8 @@
     "@fontsource/inter": "^5.3.0",
     "@fontsource/jetbrains-mono": "^5.3.0",
     "@tauri-apps/api": "^2.11.1",
-    "@tauri-apps/plugin-sql": "^2.4.0"
+    "@tauri-apps/plugin-sql": "^2.4.0",
+    "marked": "^18.0.7",
+    "ts-fsrs": "^5.4.1"
   }
 }
