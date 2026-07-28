@@ -57,6 +57,29 @@
   .prose :global(em) {
     color: var(--text-dim);
   }
+  /* Tables (e.g. the number grid) — clean, each value in its own cell. */
+  .prose :global(table) {
+    border-collapse: collapse;
+    margin: var(--space-3) 0;
+    font-size: var(--reading-size);
+  }
+  .prose :global(th),
+  .prose :global(td) {
+    border: 1px solid var(--border);
+    padding: var(--space-1) var(--space-3);
+    text-align: left;
+  }
+  .prose :global(th) {
+    color: var(--text-dim);
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    background: var(--surface-2);
+  }
+  .prose :global(tbody tr:nth-child(even)) {
+    background: var(--surface-2);
+  }
   /* Inline code is used for French terms — give it the accent tint. */
   .prose :global(code) {
     font-family: var(--font-mono);

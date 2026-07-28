@@ -7,7 +7,10 @@
 
 import { STORAGE_KEYS } from '../config/constants';
 
-export type Theme = 'dark' | 'light';
+export type Theme = 'amber' | 'dark' | 'light';
+
+/** Cycle order for the toggle; amber (the signature default) comes first. */
+const THEME_ORDER: Theme[] = ['amber', 'dark', 'light'];
 
 function applyToDocument(theme: Theme): void {
   document.documentElement.setAttribute('data-theme', theme);
@@ -15,7 +18,10 @@ function applyToDocument(theme: Theme): void {
 
 function createTheme() {
   const stored = localStorage.getItem(STORAGE_KEYS.theme);
-  let theme = $state<Theme>(stored === 'light' ? 'light' : 'dark');
+  // Amber is the default signature theme; fall back to it for new users.
+  let theme = $state<Theme>(
+    stored === 'light' || stored === 'dark' || stored === 'amber' ? stored : 'amber',
+  );
   applyToDocument(theme);
 
   function set(next: Theme): void {
@@ -30,7 +36,8 @@ function createTheme() {
     },
     set,
     toggle(): void {
-      set(theme === 'dark' ? 'light' : 'dark');
+      const i = THEME_ORDER.indexOf(theme);
+      set(THEME_ORDER[(i + 1) % THEME_ORDER.length]!);
     },
   };
 }

@@ -36,6 +36,7 @@
   /* Text color to place ON an accent fill (primary buttons, etc.). The dark-bg
    * reads best on the bright accents. */
   --on-accent: var(--bg);
+  --on-accent-2: var(--bg);
   --card-shadow: 0 8px 24px -8px oklch(0.1 0.02 285 / 0.45);
 }
 
@@ -64,7 +65,42 @@
   --gender-f: oklch(0.55 0.18 350);
 
   --on-accent: var(--bg); /* cream text on the medium-teal fill */
+  --on-accent-2: var(--bg);
   --card-shadow: 0 8px 24px -10px oklch(0 0 0 / 0.12);
+}
+
+:root[data-theme='amber'] {
+  /* --- Amber theme (DEFAULT) — warm honey base, amber hero, grape accent.
+   * Amber = attention + warmth; the amber×grape pairing is the ownable signature
+   * (not Duolingo green). Light-based so it stays comfortable for long sessions. */
+  --bg: oklch(0.98 0.012 85); /* warm honey-cream */
+  --sidebar-bg: oklch(1 0.006 85);
+  --surface: oklch(1 0.004 85);
+  --surface-2: oklch(0.955 0.012 85);
+  --border: oklch(0.2 0.02 70 / 0.1);
+  --text: oklch(0.25 0.02 70); /* warm near-black */
+  --text-dim: oklch(0.5 0.02 75);
+  --text-muted: oklch(0.6 0.015 80);
+
+  /* Hero: amber/marigold (hue 70). */
+  --accent: oklch(0.78 0.15 70);
+  --accent-bg: oklch(0.78 0.15 70 / 0.18);
+  --accent-dim: oklch(0.68 0.15 65);
+  --accent-text: oklch(0.52 0.13 60); /* darker amber for accent TEXT on light */
+  /* Signature partner: grape-violet (hue 296). */
+  --accent-2: oklch(0.53 0.23 296);
+  --accent-2-bg: oklch(0.53 0.23 296 / 0.12);
+  --accent-2-text: oklch(0.5 0.22 296);
+
+  --success: oklch(0.55 0.14 145);
+  --error: oklch(0.55 0.2 25);
+  --warn: oklch(0.6 0.14 55);
+  --gender-m: oklch(0.5 0.16 250);
+  --gender-f: oklch(0.55 0.18 350);
+
+  --on-accent: oklch(0.25 0.02 70); /* dark warm text on the light amber fill */
+  --on-accent-2: oklch(0.99 0.01 85); /* cream text on the dark grape fill */
+  --card-shadow: 0 8px 24px -12px oklch(0.4 0.06 70 / 0.18);
 }
 
 /* On dark theme, accent-colored text is just the accent itself. */

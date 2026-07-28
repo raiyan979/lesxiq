@@ -24,6 +24,7 @@
   })();
 
   const THEMES: { value: Theme; label: string }[] = [
+    { value: 'amber', label: 'Amber' },
     { value: 'dark', label: 'Dark' },
     { value: 'light', label: 'Light' },
   ];

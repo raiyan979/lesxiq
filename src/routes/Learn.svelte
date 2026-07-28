@@ -51,7 +51,7 @@
       {@const list = unitsFor(group.level)}
       {#if list.length > 0}
         <div class="level-head">
-          <span class="level-badge mono">{group.level}</span>
+          <span class="level-badge mono">Module {group.level}</span>
           <span class="level-caption">{group.caption}</span>
         </div>
         <div class="grid">
@@ -64,9 +64,10 @@
               onclick={() => open(u)}
             >
               <span class="unit-top">
-                <span class="unit-title">{u.title_en}</span>
+                <span class="unit-chapter mono">Chapter {u.order_index + 1}</span>
                 <span class="status {u.status} mono">{STATUS_LABEL[u.status]}</span>
               </span>
+              <span class="unit-title">{u.title_en}</span>
               <span class="unit-fr">{u.title_fr}</span>
               <span class="unit-meta mono">{u.grammar_focus} · {u.exercise_count} exercises</span>
             </button>
@@ -146,6 +147,16 @@
     justify-content: space-between;
     align-items: center;
     gap: var(--space-2);
+  }
+  .unit-chapter {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+  }
+  .unit.locked .unit-chapter {
+    color: var(--text-muted);
   }
   .unit-title {
     font-weight: 600;

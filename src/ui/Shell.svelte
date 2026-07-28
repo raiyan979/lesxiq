@@ -52,10 +52,15 @@
     flex-direction: column;
     flex: 1;
     min-width: 0; /* let content shrink instead of overflowing the sidebar */
+    min-height: 0; /* allow the content child to scroll within the column */
   }
   .content {
     flex: 1;
+    min-height: 0; /* REQUIRED for overflow to scroll inside a flex column */
     overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scroll-behavior: smooth;
+    padding-bottom: var(--space-8); /* breathing room so the last item isn't flush */
     outline: none; /* focused only programmatically via skip link */
   }
 

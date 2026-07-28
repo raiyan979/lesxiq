@@ -65,7 +65,7 @@
     <p class="note mono">Loading…</p>
   {:else if unit}
     <header class="head">
-      <span class="level mono">{unit.level}</span>
+      <span class="level mono">Module {unit.level} · Chapter {unit.order_index + 1}</span>
       <h1>{unit.title_en}</h1>
       <p class="fr">{unit.title_fr}</p>
       <p class="focus mono">Focus: {unit.grammar_focus}</p>
@@ -88,6 +88,17 @@
           <span class="tag vocab mono">Vocabulary</span>
           <h2>Word list</h2>
         </div>
+        <p class="audio-hint">
+          <span class="spk" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="1em" height="1em"
+              ><path
+                fill="currentColor"
+                d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4.03v8.06A4.5 4.5 0 0 0 16.5 12z"
+              /></svg
+            >
+          </span>
+          Tap the speaker to hear each word.
+        </p>
         <div class="vtable">
           {#each vocab as v (v.id)}
             <div class="vrow">
@@ -195,6 +206,18 @@
   .tag.reading {
     color: var(--warn);
     border-color: var(--warn);
+  }
+  .audio-hint {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--text-muted, var(--text-dim));
+    font-size: 13px;
+    margin-bottom: var(--space-3);
+  }
+  .audio-hint .spk {
+    display: inline-flex;
+    color: var(--accent-text);
   }
   .vtable {
     display: flex;

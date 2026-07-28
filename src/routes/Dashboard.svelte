@@ -61,7 +61,7 @@
         </div>
         <p class="hero-note">New today: {s.newDone} / {s.newTarget}</p>
         <button type="button" class="btn btn-teal" onclick={() => navigate('/review')}>
-          {caughtUp ? 'Review anyway' : 'Start Review'} <span aria-hidden="true">→</span>
+          {caughtUp ? 'Review anyway' : 'Start Journey'} <span aria-hidden="true">→</span>
         </button>
       </div>
 
@@ -88,6 +88,7 @@
               <text x="20" y="24" text-anchor="middle" class="ring-text mono">{data.continueProgress}%</text>
             </svg>
           </div>
+          <p class="unit-chapter mono">Module {u.level} · Chapter {u.order_index + 1}</p>
           <h2 class="unit-title">{u.title_en}</h2>
           <p class="unit-fr">{u.title_fr}</p>
           <p class="unit-meta">{u.grammar_focus} · {u.exercise_count} exercises</p>
@@ -349,6 +350,15 @@
   }
   .btn-amber {
     background: var(--accent-2);
+    color: var(--on-accent-2);
+  }
+  .unit-chapter {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--accent-2-text);
+    margin-bottom: 4px;
   }
 
   /* Stat tiles */

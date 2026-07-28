@@ -58,6 +58,13 @@
   }
   .audio.sm {
     font-size: 15px;
+    background: var(--accent-bg, transparent);
+    border-radius: var(--radius-pill, 999px);
+    padding: 4px 6px;
+  }
+  .audio.sm:hover {
+    background: var(--accent);
+    color: var(--on-accent);
   }
   .audio.lg {
     font-size: 40px;
