@@ -25,6 +25,7 @@ import {
 import {
   makeScheduler,
   deriveRating,
+  GRADES,
   SCHEDULER_CONFIG,
   type IntervalPreview,
 } from '../scheduler/fsrs';
@@ -205,6 +206,16 @@ export class Session {
     }
     this.error = null;
     this.#advance();
+  }
+
+  /**
+   * Practice flow: apply the auto-derived rating (from correctness + speed) and
+   * advance. Keeps FSRS scheduling working without asking the learner to
+   * self-rate — the single "Next" button in practice calls this. Falls back to
+   * Good when there's no linked card (rate() then just advances).
+   */
+  async next(): Promise<void> {
+    await this.rate(this.suggested ?? GRADES[2]!);
   }
 
   /** Advance without scheduling (used to skip past a failed grade write). */

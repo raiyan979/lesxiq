@@ -2,8 +2,8 @@
   import { router, navigate } from '../ui/router.svelte';
   import { matchPath } from '../ui/match';
   import { Session } from '../exercises/session.svelte';
-  import { GRADES } from '../scheduler';
   import { getUnitById, type UnitWithProgress } from '../db/queries';
+  import Confetti from '../ui/Confetti.svelte';
   import McExercise from '../exercises/components/McExercise.svelte';
   import TextExercise from '../exercises/components/TextExercise.svelte';
   import WordOrderExercise from '../exercises/components/WordOrderExercise.svelte';
@@ -35,13 +35,6 @@
     });
   });
 
-  const RATING_TONE: Record<string, string> = {
-    Again: 'again',
-    Hard: 'hard',
-    Good: 'good',
-    Easy: 'easy',
-  };
-
   const view = $derived(session.current);
 
   const accuracy = $derived(
@@ -53,12 +46,14 @@
   }
 
   function onWindowKey(event: KeyboardEvent): void {
-    if (session.phase === 'feedback' && session.hasCard) {
-      const n = Number(event.key);
-      if (n >= 1 && n <= 4) {
-        event.preventDefault();
-        void session.rate(GRADES[n - 1]!);
-      }
+    // In feedback, Enter/Space moves to the next question (rating is automatic).
+    if (
+      session.phase === 'feedback' &&
+      !session.error &&
+      (event.key === 'Enter' || event.key === ' ')
+    ) {
+      event.preventDefault();
+      void session.next();
     }
   }
 </script>
@@ -87,6 +82,7 @@
     <div class="card note">This unit has no exercises yet.</div>
   {:else if session.phase === 'done'}
     <div class="card done">
+      <Confetti />
       <h1>Session complete</h1>
       <p class="score">
         <span class="big mono">{session.correctCount}</span> / {session.total} correct
@@ -145,29 +141,13 @@
 
         {#if session.error}
           <div class="err">
-            <span class="err-title mono">Couldn’t save your grade</span>
+            <span class="err-title mono">Couldn’t save your progress</span>
             <span class="err-msg mono">{session.error}</span>
             <button type="button" class="btn" onclick={() => session.skip()}>Skip to next →</button>
           </div>
-        {:else if session.hasCard}
-          <p class="rate-label mono">How well did you know it?</p>
-          <div class="ratings">
-            {#each session.preview as p, i (p.rating)}
-              <button
-                type="button"
-                class="rating {RATING_TONE[p.label]}"
-                class:suggested={session.suggested === p.rating}
-                onclick={() => session.rate(p.rating)}
-              >
-                <span class="rlabel">{p.label}</span>
-                <span class="rint mono">{p.interval}</span>
-                <span class="rkey mono">{i + 1}</span>
-              </button>
-            {/each}
-          </div>
         {:else}
-          <button type="button" class="btn primary check" onclick={() => session.continue()}>
-            Continue
+          <button type="button" class="btn primary check" onclick={() => session.next()}>
+            {session.index + 1 >= session.total ? 'Finish' : 'Next question'} →
           </button>
         {/if}
       {/if}
@@ -297,60 +277,6 @@
     color: var(--text-dim);
     font-size: 13px;
   }
-  .rate-label {
-    color: var(--text-dim);
-    font-size: 13px;
-  }
-  .ratings {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: var(--space-2);
-  }
-  .rating {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-    padding: var(--space-3) var(--space-2);
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-button);
-    cursor: pointer;
-    color: var(--text);
-    transition: border-color var(--transition-fast), transform var(--transition-fast);
-  }
-  .rating:hover {
-    transform: translateY(-1px);
-  }
-  .rating .rlabel {
-    font-weight: 600;
-    font-size: 14px;
-  }
-  .rating .rint {
-    font-size: 12px;
-    color: var(--text-dim);
-  }
-  .rating .rkey {
-    font-size: 10px;
-    color: var(--text-dim);
-    opacity: 0.6;
-  }
-  .rating.again {
-    border-top: 2px solid var(--error);
-  }
-  .rating.hard {
-    border-top: 2px solid var(--warn);
-  }
-  .rating.good {
-    border-top: 2px solid var(--accent);
-  }
-  .rating.easy {
-    border-top: 2px solid var(--success);
-  }
-  .rating.suggested {
-    border-color: var(--accent);
-    box-shadow: var(--accent-glow);
-  }
   .err {
     display: flex;
     flex-direction: column;
@@ -390,6 +316,8 @@
   }
   .done {
     text-align: center;
+    position: relative;
+    overflow: hidden;
   }
   .done h1 {
     font-size: 24px;

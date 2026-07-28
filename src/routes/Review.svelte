@@ -5,6 +5,7 @@
   import { playClip } from '../ui/audio';
   import AudioButton from '../ui/AudioButton.svelte';
   import Markdown from '../ui/Markdown.svelte';
+  import Confetti from '../ui/Confetti.svelte';
 
   const review = new Review();
   void review.load();
@@ -63,6 +64,7 @@
     </div>
   {:else if review.phase === 'done'}
     <div class="card done">
+      <Confetti />
       <h1>Review complete</h1>
       <p class="score"><span class="big mono">{review.reviewed}</span> cards reviewed</p>
       <div class="actions">
@@ -279,6 +281,10 @@
   .empty,
   .done {
     text-align: center;
+  }
+  .done {
+    position: relative;
+    overflow: hidden;
   }
   .empty .big {
     font-size: 40px;
