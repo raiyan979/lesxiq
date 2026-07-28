@@ -179,6 +179,12 @@ export function bucketForecast(
 
 // --- dashboard ---
 
+/** Integer percentage `part`/`whole`, clamped 0..100 (0 when whole is 0). */
+export function progressPct(part: number, whole: number): number {
+  if (whole <= 0) return 0;
+  return Math.max(0, Math.min(100, Math.round((part / whole) * 100)));
+}
+
 /** The unit to resume: first in-progress, else first available, else null. */
 export function pickContinueUnit<T extends { status: string }>(units: readonly T[]): T | null {
   return (

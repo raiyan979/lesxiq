@@ -13,6 +13,7 @@ import {
   tallyCardStates,
   bucketForecast,
   pickContinueUnit,
+  progressPct,
 } from './derive';
 
 // A fixed local reference day (months are 0-indexed → July 26 2026, a Sunday).
@@ -140,6 +141,16 @@ describe('bucketForecast', () => {
     expect(out[3]!.count).toBe(2);
     expect(out[10]!.count).toBe(1);
     expect(out.reduce((a, b) => a + b.count, 0)).toBe(6); // +30d dropped
+  });
+});
+
+describe('progressPct', () => {
+  it('rounds part/whole to an integer percent, clamped 0..100', () => {
+    expect(progressPct(1, 14)).toBe(7);
+    expect(progressPct(0, 14)).toBe(0);
+    expect(progressPct(14, 14)).toBe(100);
+    expect(progressPct(0, 0)).toBe(0); // no division by zero
+    expect(progressPct(20, 10)).toBe(100); // clamped
   });
 });
 

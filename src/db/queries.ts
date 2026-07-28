@@ -34,6 +34,7 @@ import {
   tallyCardStates,
   bucketForecast,
   pickContinueUnit,
+  progressPct,
   type Mastery,
   type DayCount,
 } from './derive';
@@ -248,8 +249,31 @@ export interface DashboardData {
   totals: { reviews: number; wordsLearned: number; longestStreak: number };
   /** The unit to resume: first in-progress, else first available, else null. */
   continueUnit: UnitWithProgress | null;
+  /** Percentage of the continue-unit's cards that have been started (0..100). */
+  continueProgress: number;
   unitsCompleted: number;
   unitsTotal: number;
+}
+
+/**
+ * How far into a unit the learner is: the share of its cards (vocab, sentences,
+ * grammar) that are no longer 'new', as an integer percentage. Cards link to a
+ * unit through their source item, so we resolve the unit id per item type.
+ */
+export async function getUnitProgressPct(unitId: number): Promise<number> {
+  const db = await getDb();
+  const rows = await db.select<{ total: number; started: number }[]>(
+    `SELECT COUNT(*) AS total,
+            SUM(CASE WHEN c.state != 'new' THEN 1 ELSE 0 END) AS started
+       FROM cards c
+       LEFT JOIN vocab v ON c.item_type = 'vocab' AND c.item_id = v.id
+       LEFT JOIN sentences s ON c.item_type = 'sentence' AND c.item_id = s.id
+       LEFT JOIN lessons l ON c.item_type = 'grammar' AND c.item_id = l.id
+      WHERE COALESCE(v.unit_id, s.unit_id, l.unit_id) = $1`,
+    [unitId],
+  );
+  const r = rows[0];
+  return r ? progressPct(r.started ?? 0, r.total) : 0;
 }
 
 /**
@@ -266,6 +290,7 @@ export async function getDashboardData(now: Date = new Date()): Promise<Dashboar
 
   const continueUnit = pickContinueUnit(units);
   const unitsCompleted = units.filter((u) => u.status === 'completed').length;
+  const continueProgress = continueUnit ? await getUnitProgressPct(continueUnit.id) : 0;
 
   return {
     status,
@@ -275,6 +300,7 @@ export async function getDashboardData(now: Date = new Date()): Promise<Dashboar
       longestStreak: state.longest_streak,
     },
     continueUnit,
+    continueProgress,
     unitsCompleted,
     unitsTotal: units.length,
   };
