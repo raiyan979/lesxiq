@@ -40,7 +40,14 @@ it as work lands.
   (reviews/day, forecast) + a stacked card-mix bar with legend — zero chart deps. Empty states
   when no history. Data-shaping logic verified vs synthetic node:sqlite data (zero-fill, overdue
   folding, retention 3/5→60% all correct). Type-check + lint clean.
-  **Phase 6 COMPLETE** (dashboard + stats + live streak/XP status bar).
+  **Library DONE**: `Library.svelte` (was a mislabeled placeholder) — Vocabulary/Sentences
+  tabs over a search box. Vocab (`getLibraryVocab`) loads all ~400 rows once, filters
+  client-side (accent-insensitive) with an A1/A2 level filter, shows IPA + audio + a
+  mastery badge (New/Learning/Known from FSRS card state). Sentences (`searchLibrarySentences`)
+  is a capped, debounced DB search over the full ~30k Tatoeba pool (empty query → authored
+  in-unit sentences; query → LIKE fr/en, audio-backed first), with audio + mastery where a
+  card exists. Verified vs seed DB (407 vocab, audio-first ordering, mastery mapping).
+  **Phase 6 COMPLETE** (dashboard + stats + library + live streak/XP status bar).
 - [~] **Phase 7** — **Settings DONE**: `Settings.svelte` (was placeholder) with Appearance
   (theme dark/light via themeStore, font size small/medium/large via new `src/ui/prefs.svelte.ts`
   → `data-font` on <html>, localStorage-backed like theme, imported in App.svelte for flash-free

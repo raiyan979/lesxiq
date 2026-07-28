@@ -10,8 +10,11 @@ import type {
   AppStateRow,
   CardRow,
   CardItemType,
+  CardState,
   ExerciseRow,
+  Gender,
   LessonRow,
+  Level,
   SentenceRow,
   UnitRow,
   UnitStatus,
@@ -428,6 +431,122 @@ export async function resetProgress(): Promise<void> {
                       THEN 'available' ELSE 'locked' END,
         lessons_done = '[]', completed_at = NULL`,
   );
+}
+
+// --- library (browsable/searchable vocab + sentences) ---
+
+/** How well an item is known, derived from its FSRS card state. */
+export type Mastery = 'new' | 'learning' | 'known';
+
+/** Map an FSRS card state to a coarse mastery level for the library badge. */
+function masteryFromState(state: CardState | null): Mastery {
+  if (state === 'review') return 'known';
+  if (state === 'learning' || state === 'relearning') return 'learning';
+  return 'new'; // 'new' or (defensively) no card
+}
+
+export interface LibraryVocabItem {
+  id: number;
+  fr: string;
+  en: string;
+  ipa: string | null;
+  gender: Gender;
+  audioPath: string | null;
+  unitTitle: string;
+  level: Level;
+  mastery: Mastery;
+}
+
+/** All authored vocabulary with its unit, audio, and mastery (small: ~400 rows,
+ *  so the screen filters/searches this client-side). */
+export async function getLibraryVocab(): Promise<LibraryVocabItem[]> {
+  const db = await getDb();
+  const rows = await db.select<
+    (VocabRow & { title_en: string; level: Level; state: CardState | null })[]
+  >(
+    `SELECT v.*, u.title_en, u.level, c.state
+       FROM vocab v
+       JOIN units u ON u.id = v.unit_id
+       LEFT JOIN cards c ON c.item_type = 'vocab' AND c.item_id = v.id
+      ORDER BY
+        CASE u.level WHEN 'A1' THEN 0 WHEN 'A2' THEN 1 ELSE 2 END,
+        u.order_index ASC, v.id ASC`,
+  );
+  return rows.map((r) => ({
+    id: r.id,
+    fr: r.lemma_fr,
+    en: r.translation_en,
+    ipa: r.ipa,
+    gender: r.gender,
+    audioPath: r.audio_path,
+    unitTitle: r.title_en,
+    level: r.level,
+    mastery: masteryFromState(r.state),
+  }));
+}
+
+export interface LibrarySentenceItem {
+  id: number;
+  fr: string;
+  en: string;
+  audioPath: string | null;
+  /** null when the sentence is reference-only (a pool sentence with no card). */
+  mastery: Mastery | null;
+}
+
+function toSentenceItem(r: {
+  id: number;
+  fr: string;
+  en: string;
+  audio_path: string | null;
+  state: CardState | null;
+}): LibrarySentenceItem {
+  return {
+    id: r.id,
+    fr: r.fr,
+    en: r.en,
+    audioPath: r.audio_path,
+    mastery: r.state === null ? null : masteryFromState(r.state),
+  };
+}
+
+/**
+ * Search sentences for the library. Empty query returns the authored (in-unit)
+ * sentences; a query does a LIKE over the full pool (French or English), with
+ * audio-backed results first. Capped by `limit` since the pool is ~30k rows.
+ */
+export async function searchLibrarySentences(
+  query: string,
+  limit = 40,
+): Promise<LibrarySentenceItem[]> {
+  const db = await getDb();
+  const q = query.trim();
+  type Row = { id: number; fr: string; en: string; audio_path: string | null; state: CardState | null };
+
+  if (q === '') {
+    const rows = await db.select<Row[]>(
+      `SELECT s.id, s.text_fr AS fr, s.text_en AS en, s.audio_path, c.state
+         FROM sentences s
+         LEFT JOIN cards c ON c.item_type = 'sentence' AND c.item_id = s.id
+        WHERE s.unit_id IS NOT NULL
+        ORDER BY s.id ASC
+        LIMIT $1`,
+      [limit],
+    );
+    return rows.map(toSentenceItem);
+  }
+
+  const like = `%${q}%`;
+  const rows = await db.select<Row[]>(
+    `SELECT s.id, s.text_fr AS fr, s.text_en AS en, s.audio_path, c.state
+       FROM sentences s
+       LEFT JOIN cards c ON c.item_type = 'sentence' AND c.item_id = s.id
+      WHERE s.text_fr LIKE $1 OR s.text_en LIKE $1
+      ORDER BY (s.audio_path IS NOT NULL) DESC, s.difficulty_score ASC
+      LIMIT $2`,
+    [like, limit],
+  );
+  return rows.map(toSentenceItem);
 }
 
 /** Find the card for a given content item, if one exists. */
