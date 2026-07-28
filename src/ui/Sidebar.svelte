@@ -66,7 +66,7 @@
     flex-direction: column;
     height: 100%;
     width: var(--sidebar-width);
-    background: var(--surface);
+    background: var(--sidebar-bg);
     border-right: 1px solid var(--border);
     transition: width var(--transition);
     overflow: hidden;

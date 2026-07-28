@@ -9,62 +9,77 @@
 
 :root,
 :root[data-theme='dark'] {
-  /* --- Dark theme (default) --- */
-  --bg: #0e1116; /* app background */
-  --surface: #161b22; /* cards, sidebar */
-  --surface-2: #1c2129; /* raised elements, inputs */
-  --border: #262d38;
-  --text: #e6edf3; /* primary text */
-  --text-dim: #8b97a5; /* secondary text, labels */
-  --accent: #34e1c4; /* single neon accent — mint/cyan */
-  --accent-dim: #1f8f7e;
-  --success: #3fb950;
-  --error: #f85149;
-  --warn: #e3b341;
-  --gender-m: #58a6ff; /* masculine article tint */
-  --gender-f: #f778ba; /* feminine article tint */
+  /* --- Dark theme (default) — purple-tinted charcoal (hue 285) --- */
+  --bg: oklch(0.18 0.025 285); /* app background */
+  --sidebar-bg: oklch(0.16 0.025 285); /* sidebar, a touch darker than bg */
+  --surface: oklch(0.235 0.026 285); /* cards */
+  --surface-2: oklch(0.28 0.026 285); /* raised elements, inputs */
+  --border: oklch(1 0 0 / 0.08); /* hairline — white at 8% */
+  --text: oklch(0.97 0.01 285); /* primary text */
+  --text-dim: oklch(0.7 0.02 285); /* secondary text */
+  --text-muted: oklch(0.52 0.02 285); /* labels, meta */
 
-  /* Text color to place ON an accent fill (primary buttons, etc.). In dark
-   * theme the accent is bright, so near-black bg text reads best. */
+  /* Primary accent — teal-green (hue 145). */
+  --accent: oklch(0.74 0.16 145);
+  --accent-bg: oklch(0.74 0.16 145 / 0.16); /* translucent chip/pill fill */
+  --accent-dim: oklch(0.62 0.13 145); /* darker teal for borders */
+  /* Secondary accent — warm amber/coral (hue 25). */
+  --accent-2: oklch(0.72 0.18 25);
+  --accent-2-bg: oklch(0.72 0.18 25 / 0.16);
+
+  --success: oklch(0.74 0.16 145); /* reuse the teal-green */
+  --error: oklch(0.63 0.2 25); /* coral-red */
+  --warn: oklch(0.78 0.14 75); /* amber-yellow */
+  --gender-m: oklch(0.7 0.13 250); /* masculine article tint (blue) */
+  --gender-f: oklch(0.72 0.16 350); /* feminine article tint (pink) */
+
+  /* Text color to place ON an accent fill (primary buttons, etc.). The dark-bg
+   * reads best on the bright accents. */
   --on-accent: var(--bg);
-  /* Raised-card shadow — only meaningful on light theme (see override). */
-  --card-shadow: none;
+  --card-shadow: 0 8px 24px -8px oklch(0.1 0.02 285 / 0.45);
 }
 
 :root[data-theme='light'] {
-  /* --- Light theme --- */
-  --bg: #f7f9fb;
-  --surface: #ffffff;
-  --surface-2: #eef2f6;
-  --border: #d8dee6;
-  --text: #1b2027;
-  --text-dim: #5a6472;
-  /* Keep the same accent hue, but per brief use the darker accent for
-   * text-on-light legibility. --accent stays for fills (progress bars, focus
-   * rings); --accent-text is what components use for accent-colored TEXT. */
-  --accent: #34e1c4;
-  --accent-dim: #1f8f7e;
-  --accent-text: #1f8f7e;
-  /* Semantic colors darkened slightly for AA contrast on light surfaces. */
-  --success: #1a7f37;
-  --error: #cf222e;
-  --warn: #9a6700;
-  --gender-m: #0969da;
-  --gender-f: #bf3989;
+  /* --- Light theme — warm cream (hue 85) --- */
+  --bg: oklch(0.98 0.015 85);
+  --sidebar-bg: oklch(1 0.006 85);
+  --surface: oklch(1 0.006 85);
+  --surface-2: oklch(0.955 0.01 85);
+  --border: oklch(0 0 0 / 0.08);
+  --text: oklch(0.26 0.02 285);
+  --text-dim: oklch(0.52 0.02 285);
+  --text-muted: oklch(0.6 0.015 285);
 
-  --on-accent: #06231e; /* dark text on the bright accent fill */
-  --card-shadow: 0 1px 3px rgba(27, 32, 39, 0.08), 0 1px 2px rgba(27, 32, 39, 0.06);
+  --accent: oklch(0.58 0.15 145);
+  --accent-bg: oklch(0.58 0.15 145 / 0.12);
+  --accent-dim: oklch(0.5 0.13 145);
+  --accent-text: oklch(0.5 0.13 145); /* darker teal for accent TEXT on light */
+  --accent-2: oklch(0.62 0.18 25);
+  --accent-2-bg: oklch(0.62 0.18 25 / 0.12);
+
+  --success: oklch(0.55 0.14 145);
+  --error: oklch(0.55 0.2 25);
+  --warn: oklch(0.62 0.13 75);
+  --gender-m: oklch(0.5 0.16 250);
+  --gender-f: oklch(0.55 0.18 350);
+
+  --on-accent: var(--bg); /* cream text on the medium-teal fill */
+  --card-shadow: 0 8px 24px -10px oklch(0 0 0 / 0.12);
 }
 
 /* On dark theme, accent-colored text is just the accent itself. */
 :root,
 :root[data-theme='dark'] {
   --accent-text: var(--accent);
+  --accent-2-text: var(--accent-2);
+}
+:root[data-theme='light'] {
+  --accent-2-text: oklch(0.55 0.18 25);
 }
 
 :root {
   /* --- Typography --- */
-  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-body: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', monospace;
 
   /* Reading / exercise text size, scaled by the user's font-size setting.
@@ -81,10 +96,12 @@
   --space-6: 32px;
   --space-8: 48px;
 
-  /* --- Shape --- */
-  --radius-card: 10px;
-  --radius-button: 8px;
-  --radius-input: 8px;
+  /* --- Shape --- (redesign: softer, rounder) */
+  --radius-card: 14px; /* cards, tiles, list containers */
+  --radius-card-lg: 18px; /* hero/feature cards */
+  --radius-button: 12px;
+  --radius-input: 12px;
+  --radius-pill: 999px;
 
   /* --- Motion --- (§7: transitions ≤150ms ease) */
   --transition-fast: 120ms ease;

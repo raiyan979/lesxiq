@@ -19,6 +19,10 @@ content/.cache/
 src-tauri/resources/*.db
 src-tauri/resources/audio/
 
+# Local design reference (the redesign mockup) and preview tooling — not source
+Lexiq Redesign*.html
+.claude/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
