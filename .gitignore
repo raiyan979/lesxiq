@@ -26,6 +26,9 @@ Lexiq Redesign*.html
 # Local dev-only tools (master access / DB pokes) — never shipped
 scripts/dev-*.mjs
 
+# Local working notes (redesign planning, etc.) — never pushed
+*.local.md
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
