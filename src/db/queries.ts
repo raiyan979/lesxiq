@@ -22,6 +22,24 @@ import type {
   SettingRow,
 } from './types';
 import type { CardScheduling, ReviewLogFields } from '../scheduler/fsrs';
+import {
+  localDateStr,
+  startOfDayIso,
+  nextStreak,
+  isStreakAlive,
+  masteryFromState,
+  zeroFillReviews,
+  tallyRatings,
+  retentionPct,
+  tallyCardStates,
+  bucketForecast,
+  pickContinueUnit,
+  type Mastery,
+  type DayCount,
+} from './derive';
+
+// Re-exported so screens can import these from the query layer they already use.
+export type { Mastery, DayCount };
 
 // --- settings (key/value) ---
 
@@ -164,26 +182,6 @@ export async function insertReviewLog(
 /** XP awarded per review, by FSRS rating (again/hard/good/easy). */
 const XP_BY_RATING: Record<number, number> = { 1: 2, 2: 5, 3: 10, 4: 12 };
 
-/** Local calendar date as YYYY-MM-DD (streak days are local, not UTC). */
-function localDateStr(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
-
-function previousDateStr(d: Date): string {
-  const x = new Date(d);
-  x.setDate(x.getDate() - 1);
-  return localDateStr(x);
-}
-
-function startOfDayIso(now: Date): string {
-  const d = new Date(now);
-  d.setHours(0, 0, 0, 0);
-  return d.toISOString();
-}
-
 /**
  * Record one graded review against app_state: bump counters, award XP by rating,
  * and advance the daily streak (increment if yesterday, reset to 1 on a gap).
@@ -197,14 +195,7 @@ export async function recordReview(
   const state = await getAppState();
 
   const today = localDateStr(now);
-  let streak = state.streak_count;
-  if (state.last_active_date === today) {
-    // already counted today — streak unchanged
-  } else if (state.last_active_date === previousDateStr(now)) {
-    streak += 1;
-  } else {
-    streak = 1;
-  }
+  const streak = nextStreak(state.last_active_date, state.streak_count, now);
   const longest = Math.max(state.longest_streak, streak);
   const xp = XP_BY_RATING[rating] ?? 5;
 
@@ -242,13 +233,8 @@ export async function getStudyStatus(now: Date = new Date()): Promise<StudyStatu
   );
   const newDone = await countNewIntroducedToday(startOfDayIso(now));
 
-  // A streak only "counts" if the last active day was today or yesterday.
-  const alive =
-    state.last_active_date === localDateStr(now) ||
-    state.last_active_date === previousDateStr(now);
-
   return {
-    streakDays: alive ? state.streak_count : 0,
+    streakDays: isStreakAlive(state.last_active_date, now) ? state.streak_count : 0,
     due: dueRows[0]?.n ?? 0,
     newDone,
     newTarget,
@@ -278,10 +264,7 @@ export async function getDashboardData(now: Date = new Date()): Promise<Dashboar
     getUnits(),
   ]);
 
-  const continueUnit =
-    units.find((u) => u.status === 'in_progress') ??
-    units.find((u) => u.status === 'available') ??
-    null;
+  const continueUnit = pickContinueUnit(units);
   const unitsCompleted = units.filter((u) => u.status === 'completed').length;
 
   return {
@@ -297,12 +280,6 @@ export async function getDashboardData(now: Date = new Date()): Promise<Dashboar
   };
 }
 
-export interface DayCount {
-  /** Local date YYYY-MM-DD. */
-  date: string;
-  count: number;
-}
-
 export interface StatsData {
   /** Reviews done on each of the last 14 local days (oldest first, zero-filled). */
   reviewsByDay: DayCount[];
@@ -315,28 +292,6 @@ export interface StatsData {
   cardStates: { new: number; learning: number; review: number; relearning: number };
   /** Cards coming due over the next 14 local days (overdue folded into day 0). */
   forecast: DayCount[];
-}
-
-/** Build the last `n` local dates ending today, oldest first (YYYY-MM-DD). */
-function lastLocalDates(now: Date, n: number): string[] {
-  const out: string[] = [];
-  for (let i = n - 1; i >= 0; i--) {
-    const d = new Date(now);
-    d.setDate(d.getDate() - i);
-    out.push(localDateStr(d));
-  }
-  return out;
-}
-
-/** Build the next `n` local dates starting today, soonest first (YYYY-MM-DD). */
-function nextLocalDates(now: Date, n: number): string[] {
-  const out: string[] = [];
-  for (let i = 0; i < n; i++) {
-    const d = new Date(now);
-    d.setDate(d.getDate() + i);
-    out.push(localDateStr(d));
-  }
-  return out;
 }
 
 /** Everything the Stats screen charts: history, retention, card mix, forecast. */
@@ -359,50 +314,17 @@ export async function getStatsData(now: Date = new Date()): Promise<StatsData> {
     ),
   ]);
 
-  // Reviews per day: zero-fill the last 14 local days.
-  const reviewMap = new Map(reviewRows.map((r) => [r.d, r.n]));
-  const reviewsByDay = lastLocalDates(now, 14).map((date) => ({
-    date,
-    count: reviewMap.get(date) ?? 0,
-  }));
-
-  // Rating distribution + retention (good+easy share of all reviews).
-  const rc = { again: 0, hard: 0, good: 0, easy: 0 };
-  for (const r of ratingRows) {
-    if (r.rating === 1) rc.again = r.n;
-    else if (r.rating === 2) rc.hard = r.n;
-    else if (r.rating === 3) rc.good = r.n;
-    else if (r.rating === 4) rc.easy = r.n;
-  }
+  const rc = tallyRatings(ratingRows);
   const totalReviews = rc.again + rc.hard + rc.good + rc.easy;
-  const retentionPct =
-    totalReviews === 0 ? null : Math.round(((rc.good + rc.easy) / totalReviews) * 100);
 
-  // Card-state mix.
-  const stateMap = new Map(stateRows.map((r) => [r.state, r.n]));
-  const cardStates = {
-    new: stateMap.get('new') ?? 0,
-    learning: stateMap.get('learning') ?? 0,
-    review: stateMap.get('review') ?? 0,
-    relearning: stateMap.get('relearning') ?? 0,
+  return {
+    reviewsByDay: zeroFillReviews(reviewRows, now, 14),
+    ratingCounts: rc,
+    totalReviews,
+    retentionPct: retentionPct(rc),
+    cardStates: tallyCardStates(stateRows),
+    forecast: bucketForecast(dueRows, now, 14),
   };
-
-  // Forecast: bucket due-dates into the next 14 days; anything overdue → today.
-  const dates = nextLocalDates(now, 14);
-  const dateIndex = new Map(dates.map((d, i) => [d, i]));
-  const forecastCounts = new Array<number>(14).fill(0);
-  const today = dates[0]!;
-  for (const row of dueRows) {
-    if (row.d <= today) {
-      forecastCounts[0]! += row.n; // overdue + due today
-    } else {
-      const idx = dateIndex.get(row.d);
-      if (idx !== undefined) forecastCounts[idx]! += row.n;
-    }
-  }
-  const forecast = dates.map((date, i) => ({ date, count: forecastCounts[i]! }));
-
-  return { reviewsByDay, ratingCounts: rc, totalReviews, retentionPct, cardStates, forecast };
 }
 
 /**
@@ -434,16 +356,6 @@ export async function resetProgress(): Promise<void> {
 }
 
 // --- library (browsable/searchable vocab + sentences) ---
-
-/** How well an item is known, derived from its FSRS card state. */
-export type Mastery = 'new' | 'learning' | 'known';
-
-/** Map an FSRS card state to a coarse mastery level for the library badge. */
-function masteryFromState(state: CardState | null): Mastery {
-  if (state === 'review') return 'known';
-  if (state === 'learning' || state === 'relearning') return 'learning';
-  return 'new'; // 'new' or (defensively) no card
-}
 
 export interface LibraryVocabItem {
   id: number;

@@ -116,7 +116,18 @@ it as work lands.
 - **B1 ×~8** — new `b1.ts`. Add each array to `index.ts`. Rebuild seed after each batch.
 - Seed rebuild proven: **32 units (18 A1 + 14 A2) → 407 vocab, 525 exercises, 664 cards,
   0 orphans** (`npx tsx content/build.ts`; sentence_pool.json cached, so ingest skipped).
-  NOTE: audio for the new A2 vocab/sentences not yet generated — run `npm run build:audio`.
+  A2 audio generated (170 new clips via `npm run build:audio`) + seed rebuilt:
+  **407/407 vocab and 256 sentences now have audio.**
+
+### Consolidation pass (hardening) — IN PROGRESS
+- **Pure derivations extracted + tested.** `src/db/derive.ts` holds the previously
+  inline, proxy-only-verified logic (local-date bucketing, streak next/alive, mastery
+  mapping, stats zero-fill/retention/forecast-bucketing, dashboard continue-unit).
+  `queries.ts` now composes these. `src/db/derive.test.ts`: **17 tests** covering the
+  tricky bits (overdue→day0 fold, >window drop, streak reset, retention rounding).
+  **95 tests total pass.**
+- **Still TODO (highest-leverage):** content-versioned migration so authoring more
+  content (B1) stops wiping user progress on each seed update.
 
 ### Gamification / status bar (part of Phase 6) — DONE (initial)
 - Status bar is now LIVE (was hardcoded 0s): `src/ui/stats.svelte.ts` reactive store,
