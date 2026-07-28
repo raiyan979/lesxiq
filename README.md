@@ -1,47 +1,96 @@
-# Svelte + TS + Vite
+# Lexiq
 
-This template should help get you started developing with Svelte and TypeScript in Vite.
+An offline-first desktop app for learning French (CEFR **A1 → A2**, with B1 in
+progress). Structured lessons, spaced-repetition review (FSRS), six exercise
+types, pronunciation audio, and progress tracking — all running locally with no
+account and no internet required after install.
 
-## Recommended IDE Setup
+Built with [Tauri 2](https://tauri.app) (Rust host + system WebView),
+Svelte 5 + TypeScript, and SQLite.
 
-[VS Code](https://code.visualstudio.com/) + [Svelte](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode).
+---
 
-## Need an official Svelte framework?
+## 🧪 For testers — installing on Windows
 
-Check out [SvelteKit](https://github.com/sveltejs/kit#readme), which is also powered by Vite. Deploy anywhere with its serverless-first approach and adapt to various platforms, with out of the box support for TypeScript, SCSS, and Less, and easily-added support for mdsvex, GraphQL, PostCSS, Tailwind CSS, and more.
+You do **not** need to install Node, Rust, or anything technical. Just run the
+installer.
 
-## Technical considerations
+1. **Download** the installer you were sent:
+   - `Lexiq_0.1.0_x64-setup.exe` (recommended — simple, installs for the current
+     user, no admin needed), **or**
+   - `Lexiq_0.1.0_x64_en-US.msi`.
+2. **Double-click it.**
+3. **Windows will probably show a blue "Windows protected your PC" warning.**
+   This is expected — the app isn't code-signed yet (code signing costs money and
+   isn't set up for this test build). It is **not** a virus warning. To continue:
+   - Click **More info**
+   - Click **Run anyway**
 
-**Why use this over SvelteKit?**
+   > This is the single most common reason a test build "won't open" — Windows
+   > SmartScreen silently blocks unsigned apps until you do this.
+4. Follow the installer, then launch **Lexiq** from the Start menu.
 
-- It brings its own routing solution which might not be preferable for some users.
-- It is first and foremost a framework that just happens to use Vite under the hood, not a Vite app.
+**Requirements:** Windows 10 or 11 (64-bit). The app uses Microsoft WebView2,
+which is built into Windows 11 and most Windows 10 machines; if it's missing, the
+installer fetches it automatically (needs internet **once**, during install).
 
-This template contains as little as possible to get started with Vite + TypeScript + Svelte, while taking into account the developer experience with regards to HMR and intellisense. It demonstrates capabilities on par with the other `create-vite` templates and is a good starting point for beginners dipping their toes into a Vite + Svelte project.
+**Your data:** progress is stored locally at
+`%APPDATA%\com.lexiq.app\lexiq.db`. Uninstalling via *Add or Remove Programs*
+removes the app; delete that file to reset progress.
 
-Should you later need the extended capabilities and extensibility provided by SvelteKit, the template has been structured similarly to SvelteKit so that it is easy to migrate.
+### If it still won't start
+- Make sure you ran the `.exe`/`.msi`, not the source code.
+- If nothing happens on launch, install the WebView2 runtime manually from
+  Microsoft ("Evergreen Standalone Installer"), then relaunch.
+- Send the exact wording of any error dialog.
 
-**Why `global.d.ts` instead of `compilerOptions.types` inside `jsconfig.json` or `tsconfig.json`?**
+---
 
-Setting `compilerOptions.types` shuts out all other types not explicitly listed in the configuration. Using triple-slash references keeps the default TypeScript setting of accepting type information from the entire workspace, while also adding `svelte` and `vite/client` type information.
+## 🛠️ For developers — building from source
 
-**Why include `.vscode/extensions.json`?**
+Prerequisites: [Node.js](https://nodejs.org) 18+, the
+[Rust toolchain](https://www.rust-lang.org/tools/install), and the
+[Tauri prerequisites](https://tauri.app/start/prerequisites/) for Windows
+(Microsoft C++ Build Tools + WebView2).
 
-Other templates indirectly recommend extensions via the README, but this file allows VS Code to prompt the user to install the recommended extension upon opening the project.
+```bash
+npm install
 
-**Why enable `allowJs` in the TS template?**
+# Run the app in development (hot-reloading native window)
+npm run tauri dev
 
-While `allowJs: false` would indeed prevent the use of `.js` files in the project, it does not prevent the use of JavaScript syntax in `.svelte` files. In addition, it would force `checkJs: false`, bringing the worst of both worlds: not being able to guarantee the entire codebase is TypeScript, and also having worse typechecking for the existing JavaScript. In addition, there are valid use cases in which a mixed codebase may be relevant.
-
-**Why is HMR not preserving my local component state?**
-
-HMR state preservation comes with a number of gotchas! It has been disabled by default in both `svelte-hmr` and `@sveltejs/vite-plugin-svelte` due to its often surprising behavior. You can read the details [here](https://github.com/rixo/svelte-hmr#svelte-hmr).
-
-If you have state that's important to retain within a component, consider creating an external store which would not be replaced by HMR.
-
-```ts
-// store.ts
-// An extremely simple external store
-import { writable } from 'svelte/store';
-export default writable(0);
+# Produce distributable installers (.exe + .msi) in
+# src-tauri/target/release/bundle/
+npm run tauri build
 ```
+
+### Quality gates
+
+```bash
+npm run check    # svelte-check + tsc (app, node, content)
+npm run lint     # ESLint
+npm test         # Vitest (unit tests)
+```
+
+### Content pipeline
+
+The seed database (`src-tauri/resources/lexiq.db`) and audio clips are
+**generated**, not committed. To regenerate:
+
+```bash
+npm run build:content   # ingest Tatoeba sentences + build the seed DB
+npm run build:audio     # synthesize pronunciation via edge-tts (needs Python)
+```
+
+`build:content` needs the Tatoeba/frequency source files in `content/.cache/`
+(also gitignored). See `PROGRESS.md` for the full build state and architecture
+notes.
+
+---
+
+## Status
+
+Feature-complete for **A1–A2**: all six screens (Dashboard, Learn, Review,
+Library, Stats, Settings), the full learning + review loop, 32 units (407 words,
+525 exercises) with audio. Remaining before a 1.0: B1 content, a content-update
+migration that preserves progress, an accessibility pass, and code signing.
