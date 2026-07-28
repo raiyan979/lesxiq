@@ -2,6 +2,7 @@
   import { navItems } from './routes';
   import type { IconName } from './Icon.svelte';
   import Icon from './Icon.svelte';
+  import Mascot from './Mascot.svelte';
   import { router, navigate } from './router.svelte';
   import { layout } from './layout.svelte';
   import { APP_NAME } from '../config/constants';
@@ -24,8 +25,9 @@
 </script>
 
 <nav class="sidebar" class:collapsed={layout.sidebarCollapsed} aria-label="Primary">
-  <div class="brand mono" aria-hidden={layout.sidebarCollapsed}>
-    {layout.sidebarCollapsed ? 'Lx' : APP_NAME}
+  <div class="brand">
+    <Mascot size={layout.sidebarCollapsed ? 30 : 28} title="Lexiq mascot" />
+    {#if !layout.sidebarCollapsed}<span class="wordmark mono">{APP_NAME}</span>{/if}
   </div>
 
   <ul class="nav">
@@ -76,12 +78,22 @@
   }
 
   .brand {
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--accent-text);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
     padding: var(--space-4) var(--space-4) var(--space-5);
-    letter-spacing: 0.08em;
     white-space: nowrap;
+  }
+  .collapsed .brand {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .wordmark {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: var(--text);
   }
 
   .nav {
