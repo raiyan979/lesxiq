@@ -23,6 +23,9 @@ src-tauri/resources/audio/
 Lexiq Redesign*.html
 .claude/
 
+# Local dev-only tools (master access / DB pokes) — never shipped
+scripts/dev-*.mjs
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
