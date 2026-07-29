@@ -20,5 +20,5 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["**/*.ts"]
+  "include": ["**/*.ts", "../src/**/*.test.ts"]
 }

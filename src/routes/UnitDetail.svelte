@@ -10,6 +10,8 @@
     type UnitWithProgress,
   } from '../db/queries';
   import type { LessonRow, VocabRow, LessonType } from '../db/types';
+  import { audience } from '../ui/audience.svelte';
+  import { unitTitle } from '../ui/audience-copy';
 
   let unit = $state<UnitWithProgress | null>(null);
   let lessons = $state<LessonRow[]>([]);
@@ -66,7 +68,7 @@
   {:else if unit}
     <header class="head">
       <span class="level mono">Module {unit.level} · Chapter {unit.order_index + 1}</span>
-      <h1>{unit.title_en}</h1>
+      <h1>{unitTitle(audience.current, unit.slug, unit.title_en)}</h1>
       <p class="fr">{unit.title_fr}</p>
       <p class="focus mono">Focus: {unit.grammar_focus}</p>
       <p class="desc">{unit.description}</p>

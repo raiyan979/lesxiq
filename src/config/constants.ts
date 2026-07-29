@@ -24,4 +24,6 @@ export const STORAGE_KEYS = {
   theme: 'lexiq.theme',
   fontSize: 'lexiq.fontSize',
   audioEnabled: 'lexiq.audioEnabled',
+  audience: 'lexiq.audience',
+  onboarded: 'lexiq.onboarded',
 } as const;

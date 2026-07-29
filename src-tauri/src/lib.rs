@@ -3,16 +3,19 @@ use std::fs;
 use tauri::path::BaseDirectory;
 use tauri::{App, Manager};
 
-/// First-launch seed. The app ships a pre-built `lexiq.db` (curriculum + cards)
-/// as a bundled resource. The SQL plugin opens `sqlite:lexiq.db` from the app's
-/// config dir, so on the very first run we copy the bundled seed there. On every
-/// later run the user's own database is left untouched.
+/// Seed + content-sync setup. The app ships a pre-built `lexiq.db` (curriculum +
+/// cards) as a bundled resource.
+///
+/// * `lexiq.db` — the user's working database. Copied from the bundled seed on
+///   the *first* run only; left untouched afterwards so progress is preserved.
+/// * `lexiq.seed.db` — a pristine copy of the bundled seed, refreshed on *every*
+///   run. The frontend opens it read-only and diffs its `content_version`
+///   against the working DB to upgrade content in place (src/db/content-sync.ts).
+///
+/// Both live in the app config dir, where the SQL plugin resolves
+/// `sqlite:<name>` and can open them read-write.
 fn seed_database(app: &App) -> Result<(), Box<dyn std::error::Error>> {
     let config_dir = app.path().app_config_dir()?;
-    let target = config_dir.join("lexiq.db");
-    if target.exists() {
-        return Ok(());
-    }
 
     let bundled = app
         .path()
@@ -27,7 +30,24 @@ fn seed_database(app: &App) -> Result<(), Box<dyn std::error::Error>> {
     }
 
     fs::create_dir_all(&config_dir)?;
-    fs::copy(&bundled, &target)?;
+
+    // First launch only: seed the user's working DB.
+    let target = config_dir.join("lexiq.db");
+    if !target.exists() {
+        fs::copy(&bundled, &target)?;
+    }
+
+    // Every launch: refresh the read-only seed sidecar the content-sync diffs
+    // against, clearing any stale WAL/SHM so the fresh copy opens cleanly.
+    let seed_side = config_dir.join("lexiq.seed.db");
+    fs::copy(&bundled, &seed_side)?;
+    for suffix in ["-wal", "-shm"] {
+        let stale = config_dir.join(format!("lexiq.seed.db{suffix}"));
+        if stale.exists() {
+            let _ = fs::remove_file(stale);
+        }
+    }
+
     Ok(())
 }
 

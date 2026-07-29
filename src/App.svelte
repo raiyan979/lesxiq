@@ -4,7 +4,13 @@
   import './ui/theme.svelte';
   // Importing prefs stamps data-font on <html> before paint (font size + audio).
   import './ui/prefs.svelte';
+  import { audience } from './ui/audience.svelte';
+  import Onboarding from './ui/Onboarding.svelte';
   import Shell from './ui/Shell.svelte';
 </script>
 
-<Shell />
+{#if audience.onboarded}
+  <Shell />
+{:else}
+  <Onboarding />
+{/if}

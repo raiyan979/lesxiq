@@ -11,8 +11,13 @@
 
 import Database from '@tauri-apps/plugin-sql';
 import { migrations } from './migrations';
+import { syncContent } from './content-sync';
 
 const DB_URL = 'sqlite:lexiq.db';
+// Pristine copy of the bundled seed, refreshed into the config dir by the Rust
+// setup on every launch (src-tauri/src/lib.rs). Diffed against the working DB to
+// upgrade content in place without wiping progress.
+const SEED_URL = 'sqlite:lexiq.seed.db';
 
 let dbPromise: Promise<Database> | null = null;
 
@@ -42,7 +47,38 @@ async function load(): Promise<Database> {
     );
   }
   await runMigrations(db);
+  await maybeSyncContent(db);
   return db;
+}
+
+/**
+ * Upgrade the working DB's content to the bundled seed's when it's newer,
+ * preserving the user's progress (see content-sync.ts). Best-effort: any failure
+ * (e.g. the seed sidecar isn't present) is logged and swallowed so it can never
+ * block app start — the user simply keeps their current content until a later
+ * launch succeeds.
+ */
+async function maybeSyncContent(userDb: Database): Promise<void> {
+  let seedDb: Database | null = null;
+  try {
+    seedDb = await Database.load(SEED_URL);
+    const result = await syncContent(userDb, seedDb);
+    if (result.changed) {
+      console.info(`Content upgraded ${result.from} → ${result.to}.`);
+    }
+  } catch (cause) {
+    console.error('Content-sync skipped:', cause);
+  } finally {
+    if (seedDb) {
+      try {
+        // MUST pass the explicit URL: the plugin's close(db?) closes ALL pools
+        // when called with no argument — which would kill the main DB too.
+        await seedDb.close(SEED_URL);
+      } catch {
+        /* closing the read-only sidecar is best-effort */
+      }
+    }
+  }
 }
 
 /**

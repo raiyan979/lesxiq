@@ -1,6 +1,7 @@
 <script lang="ts">
   import { themeStore, type Theme } from '../ui/theme.svelte';
   import { prefs, type FontSize } from '../ui/prefs.svelte';
+  import { audience, type Audience } from '../ui/audience.svelte';
   import { getSetting, setSetting, resetProgress } from '../db/queries';
   import { stats } from '../ui/stats.svelte';
   import { navigate } from '../ui/router.svelte';
@@ -32,6 +33,10 @@
     { value: 'small', label: 'Small' },
     { value: 'medium', label: 'Medium' },
     { value: 'large', label: 'Large' },
+  ];
+  const AUDIENCES: { value: Audience; label: string }[] = [
+    { value: 'adult', label: 'Adult' },
+    { value: 'child', label: 'Child' },
   ];
   const RETENTIONS = ['0.8', '0.85', '0.9', '0.95'];
 
@@ -103,6 +108,22 @@
             class:active={prefs.fontSize === f.value}
             onclick={() => prefs.setFontSize(f.value)}
           >{f.label}</button>
+        {/each}
+      </div>
+    </div>
+    <div class="row">
+      <div class="label">
+        <span class="name">Reading level</span>
+        <span class="hint">Child mode uses simpler chapter names. French stays the same.</span>
+      </div>
+      <div class="seg">
+        {#each AUDIENCES as a (a.value)}
+          <button
+            type="button"
+            class="seg-btn"
+            class:active={audience.current === a.value}
+            onclick={() => audience.set(a.value)}
+          >{a.label}</button>
         {/each}
       </div>
     </div>

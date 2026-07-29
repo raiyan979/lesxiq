@@ -142,6 +142,7 @@ INSERT OR IGNORE INTO app_state (id) VALUES (1);
 
 INSERT OR IGNORE INTO settings (key, value) VALUES
   ('theme', 'dark'),
+  ('content_version', '0'),
   ('daily_goal', '30'),
   ('new_cards_per_day', '15'),
   ('target_retention', '0.9'),

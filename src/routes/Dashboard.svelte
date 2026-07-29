@@ -1,6 +1,8 @@
 <script lang="ts">
   import { navigate } from '../ui/router.svelte';
   import { getDashboardData, type DashboardData } from '../db/queries';
+  import { audience } from '../ui/audience.svelte';
+  import { unitTitle, copy } from '../ui/audience-copy';
 
   let data = $state<DashboardData | null>(null);
   let error = $state<string | null>(null);
@@ -37,7 +39,7 @@
 
     <header class="head">
       <div class="greeting"><h1>{greeting}</h1><span class="wave">👋</span></div>
-      <p class="sub">Here's where you left off.</p>
+      <p class="sub">{copy(audience.current, 'dashboardSub')}</p>
     </header>
 
     <div class="hero">
@@ -89,7 +91,7 @@
             </svg>
           </div>
           <p class="unit-chapter mono">Module {u.level} · Chapter {u.order_index + 1}</p>
-          <h2 class="unit-title">{u.title_en}</h2>
+          <h2 class="unit-title">{unitTitle(audience.current, u.slug, u.title_en)}</h2>
           <p class="unit-fr">{u.title_fr}</p>
           <p class="unit-meta">{u.grammar_focus} · {u.exercise_count} exercises</p>
           <button type="button" class="btn btn-amber" onclick={() => navigate(`/learn/${u.id}`)}>

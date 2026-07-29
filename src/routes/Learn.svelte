@@ -2,6 +2,8 @@
   import { navigate } from '../ui/router.svelte';
   import { getUnits, type UnitWithProgress } from '../db/queries';
   import type { Level } from '../db/types';
+  import { audience } from '../ui/audience.svelte';
+  import { unitTitle, copy, type CopyKey } from '../ui/audience-copy';
 
   let units = $state<UnitWithProgress[] | null>(null);
   let error = $state<string | null>(null);
@@ -10,11 +12,12 @@
     .then((u) => (units = u))
     .catch((e: unknown) => (error = e instanceof Error ? e.message : 'Failed to load units.'));
 
-  const LEVELS: { level: Level; caption: string }[] = [
-    { level: 'A1', caption: 'Beginner' },
-    { level: 'A2', caption: 'Elementary' },
-    { level: 'B1', caption: 'Intermediate' },
-  ];
+  const LEVELS: Level[] = ['A1', 'A2', 'B1'];
+  const LEVEL_CAPTION: Record<Level, CopyKey> = {
+    A1: 'levelA1',
+    A2: 'levelA2',
+    B1: 'levelB1',
+  };
 
   function unitsFor(level: Level): UnitWithProgress[] {
     return (units ?? []).filter((u) => u.level === level);
@@ -37,8 +40,8 @@
 </script>
 
 <section class="view">
-  <h1>Learn</h1>
-  <p class="sub">Work through the CEFR curriculum, one unit at a time.</p>
+  <h1>{copy(audience.current, 'learnHeading')}</h1>
+  <p class="sub">{copy(audience.current, 'learnSub')}</p>
 
   {#if error}
     <p class="note">{error}</p>
@@ -47,12 +50,12 @@
   {:else if units.length === 0}
     <p class="note">No units found in the database.</p>
   {:else}
-    {#each LEVELS as group (group.level)}
-      {@const list = unitsFor(group.level)}
+    {#each LEVELS as level (level)}
+      {@const list = unitsFor(level)}
       {#if list.length > 0}
         <div class="level-head">
-          <span class="level-badge mono">Module {group.level}</span>
-          <span class="level-caption">{group.caption}</span>
+          <span class="level-badge mono">Module {level}</span>
+          <span class="level-caption">{copy(audience.current, LEVEL_CAPTION[level])}</span>
         </div>
         <div class="grid">
           {#each list as u (u.id)}
@@ -67,7 +70,7 @@
                 <span class="unit-chapter mono">Chapter {u.order_index + 1}</span>
                 <span class="status {u.status} mono">{STATUS_LABEL[u.status]}</span>
               </span>
-              <span class="unit-title">{u.title_en}</span>
+              <span class="unit-title">{unitTitle(audience.current, u.slug, u.title_en)}</span>
               <span class="unit-fr">{u.title_fr}</span>
               <span class="unit-meta mono">{u.grammar_focus} · {u.exercise_count} exercises</span>
             </button>

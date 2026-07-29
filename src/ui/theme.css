@@ -41,11 +41,12 @@
 }
 
 :root[data-theme='light'] {
-  /* --- Light theme — warm cream (hue 85) --- */
-  --bg: oklch(0.98 0.015 85);
-  --sidebar-bg: oklch(1 0.006 85);
-  --surface: oklch(1 0.006 85);
-  --surface-2: oklch(0.955 0.01 85);
+  /* --- Light theme — crisp near-white neutral. Deliberately cool/clean so it
+   * reads clearly apart from the warm amber theme (which owns the honey look). */
+  --bg: oklch(0.985 0.003 250);
+  --sidebar-bg: oklch(1 0.002 250);
+  --surface: oklch(1 0.002 250);
+  --surface-2: oklch(0.955 0.004 250);
   --border: oklch(0 0 0 / 0.08);
   --text: oklch(0.26 0.02 285);
   --text-dim: oklch(0.52 0.02 285);
@@ -73,14 +74,14 @@
   /* --- Amber theme (DEFAULT) — warm honey base, amber hero, grape accent.
    * Amber = attention + warmth; the amber×grape pairing is the ownable signature
    * (not Duolingo green). Light-based so it stays comfortable for long sessions. */
-  --bg: oklch(0.98 0.012 85); /* warm honey-cream */
-  --sidebar-bg: oklch(1 0.006 85);
-  --surface: oklch(1 0.004 85);
-  --surface-2: oklch(0.955 0.012 85);
-  --border: oklch(0.2 0.02 70 / 0.1);
-  --text: oklch(0.25 0.02 70); /* warm near-black */
-  --text-dim: oklch(0.5 0.02 75);
-  --text-muted: oklch(0.6 0.015 80);
+  --bg: oklch(0.955 0.035 80); /* honey wash — visibly warm, not white */
+  --sidebar-bg: oklch(0.945 0.04 79); /* a touch deeper for definition */
+  --surface: oklch(0.99 0.02 83); /* cards: lighter + warm, pop above the wash */
+  --surface-2: oklch(0.925 0.045 79); /* raised: deeper honey */
+  --border: oklch(0.4 0.06 70 / 0.14); /* warm hairline */
+  --text: oklch(0.26 0.03 65); /* warm near-black */
+  --text-dim: oklch(0.48 0.035 68);
+  --text-muted: oklch(0.58 0.03 72);
 
   /* Hero: amber/marigold (hue 70). */
   --accent: oklch(0.78 0.15 70);

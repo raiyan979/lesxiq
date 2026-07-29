@@ -27,5 +27,8 @@
     "checkJs": true,
     "moduleDetection": "force"
   },
-  "include": ["src/**/*.ts", "src/**/*.js", "src/**/*.svelte"]
+  "include": ["src/**/*.ts", "src/**/*.js", "src/**/*.svelte"],
+  /* Tests run under Node (vitest) and may use node: builtins, so they're
+   * type-checked by content/tsconfig.json (types: ["node"]) instead. */
+  "exclude": ["src/**/*.test.ts"]
 }
